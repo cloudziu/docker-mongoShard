@@ -1,0 +1,165 @@
+version: '3.7'
+
+services:
+#################################
+## Define the FIRST ReplocaSet ##
+#################################
+  mongo1-r1:
+    image: mongo:4.2.3-bionic
+    command: ["mongod", "--shardsvr", "--replSet", "r1", "--dbpath", "/data/db", "--port", "27017"]
+    volumes:
+      - m1r1-data:/data/db
+    networks:
+      - mongo-shard
+
+  mongo2-r1:
+    image: mongo:4.2.3-bionic
+    command: ["mongod", "--shardsvr", "--replSet", "r1", "--dbpath", "/data/db", "--port", "27017"]
+    volumes:
+      - m2r1-data:/data/db
+    networks:
+      - mongo-shard
+
+  mongo3-r1:
+    image: mongo:4.2.3-bionic
+    command: ["mongod", "--shardsvr", "--replSet", "r1", "--dbpath", "/data/db", "--port", "27017"]
+    volumes:
+      - m3r1-data:/data/db
+    networks:
+      - mongo-shard
+
+
+##################################
+## Define the second ReplocaSet ##
+##################################
+  mongo1-r2:
+    image: mongo:4.2.3-bionic
+    command: ["mongod", "--shardsvr", "--replSet", "r2", "--dbpath", "/data/db", "--port", "27017"]
+    volumes:
+      - m1r2-data:/data/db
+    networks:
+      - mongo-shard
+
+  mongo2-r2:
+    image: mongo:4.2.3-bionic
+    command: ["mongod", "--shardsvr", "--replSet", "r2", "--dbpath", "/data/db", "--port", "27017"]
+    volumes:
+      - m2r2-data:/data/db
+    networks:
+      - mongo-shard
+
+  mongo3-r2:
+    image: mongo:4.2.3-bionic
+    command: ["mongod", "--shardsvr", "--replSet", "r2", "--dbpath", "/data/db", "--port", "27017"]
+    volumes:
+      - m3r2-data:/data/db
+    networks:
+      - mongo-shard
+
+
+#####################################
+## Define ConfigServers ReplicaSet ##
+#####################################
+  mongo1-c:
+    image: mongo:4.2.3-bionic
+
+    command: ["mongod","--configsvr", "--replSet", "rConf", "--dbpath", "/data/db", "--port", "27017"]
+    volumes:
+      - m1c-data:/data/db
+    networks:
+      - mongo-shard
+
+  mongo2-c:
+    image: mongo:4.2.3-bionic
+    command: ["mongod","--configsvr", "--replSet", "rConf", "--dbpath", "/data/db", "--port", "27017"]
+    volumes:
+      - m2c-data:/data/db
+    networks:
+      - mongo-shard
+
+  mongo3-c:
+    image: mongo:4.2.3-bionic
+    command: ["mongod","--configsvr", "--replSet", "rConf", "--dbpath", "/data/db", "--port", "27017"]
+    volumes:
+      - m3c-data:/data/db
+    networks:
+      - mongo-shard
+
+
+##########################
+## Define mongoS router ##
+##########################
+  mongos:
+    build: './mongos'
+    ports:
+      - "${MONGOS_PORT}:27017"  
+    command: [./init.sh]
+    depends_on: 
+      - mongo1-r1
+      - mongo2-r1
+      - mongo3-r1
+      - mongo1-r2
+      - mongo2-r2
+      - mongo3-r2
+      - mongo1-c
+      - mongo2-c
+      - mongo3-c
+    volumes:
+      - m1c-data:/data/db
+    networks:
+      - mongo-shard
+
+# DEPECATED
+# #########################
+# ### Job creating a RS ###
+# #########################
+#   mongo-job-r1:
+#     build: './job'
+#     command: [./init.sh]
+#     depends_on: 
+#       - mongo1-r1
+#       - mongo2-r1
+#       - mongo3-r1
+#       - mongo1-r2
+#       - mongo2-r2
+#       - mongo3-r2
+#       - mongo1-c
+#       - mongo2-c
+#       - mongo3-c
+#     networks:
+#       - mongo-shard
+
+
+# ##################
+# ### Python job ###
+# ##################
+  python-job:
+    build: './python'
+    depends_on: 
+      - mongo1-r1
+      - mongo2-r1
+      - mongo3-r1
+      - mongo1-r2
+      - mongo2-r2
+      - mongo3-r2
+      - mongo1-c
+      - mongo2-c
+      - mongo3-c
+    networks:
+      - mongo-shard
+
+volumes:
+  m1r1-data:
+  m2r1-data:
+  m3r1-data:
+  m1r2-data:
+  m2r2-data:
+  m3r2-data:
+  m1c-data:
+  m3c-data:
+  m2c-data:
+
+networks:
+  mongo-shard:
+    
+    
