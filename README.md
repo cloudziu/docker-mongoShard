@@ -73,7 +73,7 @@ To start sharding collection
 mongos> sh.shardCollection("test.grades", {student_id : 1})
 ```
 
-## Deletgin / Troubleshooting
+## Deleting / Troubleshooting
 To delete the cluster, without deleting the volumes:
 ```bash
 >docker-compose down
